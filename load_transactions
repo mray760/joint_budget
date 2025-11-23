@@ -4,17 +4,53 @@ filepath = '/Users/mattray/Desktop/Budget/inputs'
 
 
 
-def load_chase(filename):
-    df = pd.read_csv(fr'/Users/mattray/Desktop/Budget/inputs/{filename}.csv')
-    df = df[["Transaction Date", "Post Date", "Description",
+def load_chase(filename,periods,categories):
+
+    ### Data Intake
+
+    df_list = []
+
+    for p in periods:
+        p = p.replace("/", ".")
+        df = pd.read_csv(fr'/Users/mattray/Desktop/Budget/inputs/{filename}_{p}.csv')
+        df_list.append(df)
+
+        # If no files were found, return an empty DataFrame
+    if not df_list:
+        print("No files were located")
+        return pd.DataFrame()
+
+    combined = pd.concat(df_list, ignore_index=True)
+
+    #### Begin Normalization
+    df = combined[["Transaction Date", "Post Date", "Description",
         "Category", "Type", "Amount"]]
+
+    df.loc[df["Description"].str.contains("Kindle Svcs", na=False), "Category"] = "Subscriptions"
+    df.loc[df["Description"].str.contains("PETCO", na=False), "Category"] = "Pet Food"
+    df.loc[df["Description"].str.contains("FITNESS LEGENDZ", na=False), "Category"] = "Subscriptions"
+
+    df = df[~df["Description"].str.contains("Zelle payment from Matt Ray", case=False, na=False)]
+    df = df[~df["Description"].str.contains("Payment Thank You - Web", case=False, na=False)]
+
 
     df["Category"] = df["Category"].replace({
         "Food & Drink": "Leisure",
         "Shopping": "Leisure",
         "Health & Wellness": "Leisure",
-        "Entertainment": "Leisure"
+        "Entertainment": "Leisure",
     })
+    df["Category"] = df["Category"].str.strip()
+
+    bad = df[~df["Category"].isin(categories)]
+    print("Rows NOT in categories list:")
+    print(bad[["Description", "Category"]].head(20))
+
+    mask = ~df["Category"].isin(categories)
+
+    df.loc[mask & (df["Amount"] > 0), "Category"] = "Other Income"
+    df.loc[mask & (df["Amount"] < 0), "Category"] = "Other Expense"
+
     return df
 
 
@@ -28,23 +64,44 @@ CHECKING_CATEGORY_MAP = {
     "Spotify": "Subscriptions",
     "TACO": "Leisure",
     "TRADER": "Groceries",
-    "Zelle¬Æ Payment to Amy Ray": "Amy's Allowance",
+    "Zelle¬Æ Payment to Amy Ray": "Amys Allowance",
     "FITNESS LEGENDZ": "Subscriptions",
     "PETCO": "Pet Food",
     "NSM DBAMR.COOPER": "Mortgage",
     "ST LUKE'S HS": "Direct Deposit - Amy",
     "Clearwater A-OSV" : "Direct Deposit - Matt",
-    "Zelle¬Æ Payment to Amy Bellenbaum": "Amy's Allowance"
+    "Zelle¬Æ Payment to Amy Bellenbaum": "Amys Allowance",
+    "RENT": "Rent"
 }
 
 
 
 
-def load_sofi(filename):
-    df = pd.read_csv(fr'/Users/mattray/Desktop/Budget/inputs/{filename}.csv')
-    df = df[["Date", "Description", "Type", "Amount"]]
+def load_sofi(filename,periods,categories):
+
+    ### Data Intake
+
+    df_list = []
+
+    for p in periods:
+        p = p.replace("/", ".")
+        df = pd.read_csv(fr'/Users/mattray/Desktop/Budget/inputs/{filename}_{p}.csv')
+        df_list.append(df)
+
+        # If no files were found, return an empty DataFrame
+    if not df_list:
+        print("No files were located")
+        return pd.DataFrame()
+
+    combined = pd.concat(df_list, ignore_index=True)
+
+
+    ##### Begin Normalization
+    df = combined[["Date", "Description", "Type", "Amount"]]
     df = df[~df["Description"].str.contains("MSPBNA", case=False, na=False)]
     df = df[~df["Description"].str.contains("CHASE CREDIT CRD", case=False, na=False)]
+    df = df[~df["Description"].str.contains("Zelle¬Æ Payment from Amy Ray", case=False, na=False)]
+    df = df[~df["Description"].str.contains("Payment Thank You - Web", case=False, na=False)]
 
     def map_checking_category(row):
         desc = row["Description"]
@@ -61,23 +118,29 @@ def load_sofi(filename):
         else:
             return "Other Expense"
 
-    df["Category"] = df.apply(map_checking_category, axis=1)
+
     df.loc[
         (df["Description"] == "VENMO") & (df["Amount"] > 0),
         "Category"
-    ] = "Other Income"
+    ] = "Venmo Income"
     df.loc[
         (df["Description"] == "VENMO") & (df["Amount"] < 0),
         "Category"
-    ] = "Other Expense"
+    ] = "Venmo Expense"
     df.loc[
         (df["Description"].str.contains("Zelle")) & (df["Amount"] > 0) & (~df["Description"].str.contains("payment to amy ray", case=False, na=False)),
         "Category"
-    ] = "Other Income"
+    ] = "Zelle Income"
     df.loc[
         (df["Description"].str.contains("Zelle")) & (df["Amount"] < 0) & (~df["Description"].str.contains("payment to amy ray", case=False, na=False)),
         "Category"
-    ] = "Other Expense"
+    ] = "Zelle Expense"
+    df["Category"] = df.apply(map_checking_category, axis=1)
+
+    mask = ~df["Category"].isin(categories)
+
+    df.loc[mask & (df["Amount"] > 0), "Category"] = "Other Income"
+    df.loc[mask & (df["Amount"] < 0), "Category"] = "Other Expense"
 
     return df
 
