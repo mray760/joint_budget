@@ -3,15 +3,16 @@ import pandas as pd
 output_file = '/Users/mattray/Desktop/Budget/outputs'
 
 
-def write_excel(date, expense_df, income_df,combined_df):
+def write_excel(date, outflow_df, inflow_df,combined_df,summary_df):
     p = date.replace("/", ".")
 
     output_path = fr'/Users/mattray/Desktop/Budget/outputs/{p}.xlsx'
 
     # Dictionary of sheets to write
     sheets = {
-        "Expenses": expense_df,
-        "Income": income_df,
+        "Summary": summary_df,
+        "Outflows": outflow_df,
+        "Inflows": inflow_df,
         'Transactions - Normalized': combined_df
     }
 
