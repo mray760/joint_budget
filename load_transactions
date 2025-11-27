@@ -65,13 +65,15 @@ CHECKING_CATEGORY_MAP = {
     "TACO": "Leisure",
     "TRADER": "Groceries",
     "Zelle¬Æ Payment to Amy Ray": "Amys Allowance",
+    "Zelle® Payment to Amy Ray": "Amys Allowance",
     "FITNESS LEGENDZ": "Subscriptions",
     "PETCO": "Pet Food",
     "NSM DBAMR.COOPER": "Mortgage",
     "ST LUKE'S HS": "Direct Deposit - Amy",
     "Clearwater A-OSV" : "Direct Deposit - Matt",
     "Zelle¬Æ Payment to Amy Bellenbaum": "Amys Allowance",
-    "RENT": "Rent"
+    "RENT": "Rent",
+    "MSPBNA": "Investments"
 }
 
 
@@ -98,7 +100,7 @@ def load_sofi(filename,periods,categories):
 
     ##### Begin Normalization
     df = combined[["Date", "Description", "Type", "Amount"]]
-    df = df[~df["Description"].str.contains("MSPBNA", case=False, na=False)]
+    #df = df[~df["Description"].str.contains("MSPBNA", case=False, na=False)]
     df = df[~df["Description"].str.contains("CHASE CREDIT CRD", case=False, na=False)]
     df = df[~df["Description"].str.contains("Zelle¬Æ Payment from Amy Ray", case=False, na=False)]
     df = df[~df["Description"].str.contains("Payment Thank You - Web", case=False, na=False)]
