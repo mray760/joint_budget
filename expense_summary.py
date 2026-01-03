@@ -1,44 +1,51 @@
 import pandas as pd
 
-
-thresholds = {
-        "Groceries": 1300,
-        "Gas": 500,
-        "Food & Drink": 250,
-        "Insurance": 95,
-        "Utilities": 100,
-        "Subscriptions": 400,
-        "Entertainment": 75,
-        "Other": 100,
-        "Pet Food": 150
-    }
-
-
-def build_expense_summary(df_sofi,df_chase):
-    cc = df_chase
-    checking = df_sofi
-
+def build_expense_summary(combined_transactions,expense_cat,investment_cat):
+    
     # Credit card: expenses are negative; ignore payments & returns
-    cc_expenses = cc[cc["Amount"] < 0]
+    combined_transactions = combined_transactions[combined_transactions["Amount"] < 0]
 
-    # Checking: expenses are negative; ignore deposits
-    checking_expenses = checking[checking["Amount"] < 0]
 
-    # Combine
-    combined = pd.concat([
-        cc_expenses[["Category", "Amount"]],
-        checking_expenses[["Category", "Amount"]],
-    ])
+    summary = combined_transactions.groupby("Category")["Amount"].sum()
 
-    summary = combined.groupby("Category")["Amount"].sum()
-
-    # Budget check
-    alerts = []
-    for cat, total in summary.items():
-        if cat in thresholds and total > thresholds[cat]:
-            alerts.append(f"⚠️ OVER BUDGET: {cat} – ${total:.2f} (limit ${thresholds[cat]:.2f})")
 
     summary_expense = summary.to_frame().reset_index()
     summary_expense.columns = ["Category", "Amount"]
 
-    return summary_expense, alerts
+    df = summary_expense
+
+    if (~df['Category'].isin(expense_cat + investment_cat)).any():
+        print("Unknown expense category")
+
+
+    df["Type"] = df["Category"].apply(
+        lambda x: "Expense" if x in expense_cat
+        else ("Investment" if x in investment_cat else None)
+    )
+
+    df = df[['Type', 'Category', 'Amount']]
+
+    # Split into two groups
+    expense_df = df[df['Type'] == 'Expense'].copy()
+    investment_df = df[df['Type'] == 'Investment'].copy()
+
+    # Create section headers
+    expense_header = pd.DataFrame({'Type': ['Expense'], 'Category': [''], 'Amount': ['']})
+    investment_header = pd.DataFrame({'Type': ['Investment'], 'Category': [''], 'Amount': ['']})
+
+    # Blank spacer rows
+    blank_rows = pd.DataFrame({'Type': [''], 'Category': [''], 'Amount': ['']})
+    blank_rows2 = blank_rows.copy()
+
+    # Build final output
+    final_df = pd.concat([
+        expense_header,
+        expense_df.assign(Type=""),  # remove repeated labels
+        blank_rows,
+        investment_header,
+        investment_df.assign(Type=""),  # remove repeated labels
+    ], ignore_index=True)
+
+    return final_df
+
+
