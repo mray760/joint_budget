@@ -1,8 +1,7 @@
 import pandas as pd
-from classifications.categories_py import CHECKING_CATEGORY_MAP
 
 
-
+##### Chase
 
 def chase_norm(raw_chase,categories):
     df = raw_chase[["Transaction Date", "Post Date", "Description",
@@ -43,6 +42,38 @@ def chase_norm(raw_chase,categories):
     df.loc[mask & (df["Amount"] < 0), "Category"] = "Other Expense"
 
     return df
+
+
+
+
+##### SOFI
+
+CHECKING_CATEGORY_MAP = {
+    "STATE FARM": "Insurance",
+    "IDAHO POWER": "Utilities",
+    "INTERMOUNTAIN": "Utilities",
+    "COVENANT": "Subscriptions",
+    "CHATGPT": "Subscriptions",
+    "Spotify": "Subscriptions",
+    "TACO": "Leisure",
+    "TRADER": "Groceries",
+    "Zelle¬Æ Payment to Amy Ray": "Amys Allowance",
+    "Zelle® Payment to Amy Ray": "Amys Allowance",
+    "FITNESS LEGENDZ": "Subscriptions",
+    "PETCO": "Pet Food",
+    "NSM DBAMR.COOPER": "Mortgage",
+    "ST LUKE'S HS": "Direct Deposit - Amy",
+    "Clearwater A-OSV" : "Direct Deposit - Matt",
+    "Zelle¬Æ Payment to Amy Bellenbaum": "Amys Allowance",
+    "RENT": "Rent",
+    "Rent": "Rent",
+    "MSPBNA": "Investments",
+    "COINBASE": 'Investments',
+    "Coinbase": "Investments",
+    "VERIZON" : "Subscriptions",
+    "VZWRLSS" : "Subscriptions"
+}
+
 
 
 def sofi_norm(sofi_raw,categories):
