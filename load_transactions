@@ -1,6 +1,7 @@
 import pandas as pd
+from classifications.categories import CHECKING_CATEGORY_MAP
 
-filepath = '/Users/mattray/Desktop/Budget/inputs'
+filepath = '/Users/mattray/Desktop/vscode_projects/joint_app/load_transactions'
 
 
 
@@ -12,7 +13,7 @@ def load_chase(filename,periods,categories):
 
     for p in periods:
         p = p.replace("/", ".")
-        df = pd.read_csv(fr'/Users/mattray/Desktop/Budget/inputs/{filename}_{p}.csv')
+        df = pd.read_csv(fr'/Users/mattray/Desktop/vscode_projects/joint_app/load_transactions/inputs/{filename}_{p}.csv')
         df_list.append(df)
 
         # If no files were found, return an empty DataFrame
@@ -25,10 +26,17 @@ def load_chase(filename,periods,categories):
     #### Begin Normalization
     df = combined[["Transaction Date", "Post Date", "Description",
         "Category", "Type", "Amount"]]
+    
+    df = df[~df['Type'].str.contains('Payment',case = False, na=False) ]
 
     df.loc[df["Description"].str.contains("Kindle Svcs", na=False), "Category"] = "Subscriptions"
     df.loc[df["Description"].str.contains("PETCO", na=False), "Category"] = "Pet Food"
     df.loc[df["Description"].str.contains("FITNESS LEGENDZ", na=False), "Category"] = "Subscriptions"
+    df.loc[df["Description"].str.contains("KALSHI", na=False), "Category"] = "Leisure"
+    df.loc[df["Description"].str.contains("JD`S BODEGA", na=False), "Category"] = "Leisure"
+    df.loc[df["Description"].str.contains("BARBER STORY", na=False), "Category"] = "Subscriptions"
+
+    
 
     df = df[~df["Description"].str.contains("Zelle payment from Matt Ray", case=False, na=False)]
     df = df[~df["Description"].str.contains("Payment Thank You - Web", case=False, na=False)]
@@ -39,6 +47,8 @@ def load_chase(filename,periods,categories):
         "Shopping": "Leisure",
         "Health & Wellness": "Leisure",
         "Entertainment": "Leisure",
+        "Bills & Utilities": "Utilities",
+        "Travel": "Leisure"
     })
     df["Category"] = df["Category"].str.strip()
 
@@ -55,28 +65,6 @@ def load_chase(filename,periods,categories):
 
 
 
-CHECKING_CATEGORY_MAP = {
-    "STATE FARM": "Insurance",
-    "IDAHO POWER": "Utilities",
-    "INTERMOUNTAIN": "Utilities",
-    "COVENANT": "Subscriptions",
-    "CHATGPT": "Subscriptions",
-    "Spotify": "Subscriptions",
-    "TACO": "Leisure",
-    "TRADER": "Groceries",
-    "Zelle¬Æ Payment to Amy Ray": "Amys Allowance",
-    "Zelle® Payment to Amy Ray": "Amys Allowance",
-    "FITNESS LEGENDZ": "Subscriptions",
-    "PETCO": "Pet Food",
-    "NSM DBAMR.COOPER": "Mortgage",
-    "ST LUKE'S HS": "Direct Deposit - Amy",
-    "Clearwater A-OSV" : "Direct Deposit - Matt",
-    "Zelle¬Æ Payment to Amy Bellenbaum": "Amys Allowance",
-    "RENT": "Rent",
-    "MSPBNA": "Investments"
-}
-
-
 
 
 def load_sofi(filename,periods,categories):
@@ -87,7 +75,7 @@ def load_sofi(filename,periods,categories):
 
     for p in periods:
         p = p.replace("/", ".")
-        df = pd.read_csv(fr'/Users/mattray/Desktop/Budget/inputs/{filename}_{p}.csv')
+        df = pd.read_csv(fr'/Users/mattray/Desktop/vscode_projects/joint_app/load_transactions/inputs/{filename}_{p}.csv')
         df_list.append(df)
 
         # If no files were found, return an empty DataFrame
@@ -104,6 +92,8 @@ def load_sofi(filename,periods,categories):
     df = df[~df["Description"].str.contains("CHASE CREDIT CRD", case=False, na=False)]
     df = df[~df["Description"].str.contains("Zelle¬Æ Payment from Amy Ray", case=False, na=False)]
     df = df[~df["Description"].str.contains("Payment Thank You - Web", case=False, na=False)]
+    df = df[~df["Description"].str.contains("Payment Thank You - Web", case=False, na=False)]
+    #df = df[~df["Description"].str.lower().str.contains("coinbase", case=False, na=False)]
 
     def map_checking_category(row):
         desc = row["Description"]
@@ -145,4 +135,3 @@ def load_sofi(filename,periods,categories):
     df.loc[mask & (df["Amount"] < 0), "Category"] = "Other Expense"
 
     return df
-
