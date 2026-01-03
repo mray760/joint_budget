@@ -1,5 +1,5 @@
 import pandas as pd
-from Categories import expense_cat, investment_cat
+import json
 
 
 def combine_joint_chase(df_chase,df_joint):
@@ -11,37 +11,23 @@ def combine_joint_chase(df_chase,df_joint):
     return combined_df
 
 
-def normalize_output(outflows):
-    df = outflows
 
-    df["Type"] = df["Category"].apply(
-        lambda x: "Expense" if x in expense_cat
-        else ("Investment" if x in investment_cat else None)
-    )
+def run_periods_norm(from_date,to_date):
+    all_periods = pd.date_range("2025-01-01", "2025-12-01", freq="MS").strftime("%m/%Y").tolist()
+    start, end = from_date, to_date
+    selected_periods = all_periods[all_periods.index(start): all_periods.index(end)+1]
 
-    df = df[['Type', 'Category', 'Amount']]
+    print("Selected periods:", selected_periods)
 
-    # Split into two groups
-    expense_df = df[df['Type'] == 'Expense'].copy()
-    investment_df = df[df['Type'] == 'Investment'].copy()
+    return selected_periods
 
-    # Create section headers
-    expense_header = pd.DataFrame({'Type': ['Expense'], 'Category': [''], 'Amount': ['']})
-    investment_header = pd.DataFrame({'Type': ['Investment'], 'Category': [''], 'Amount': ['']})
 
-    # Blank spacer rows
-    blank_rows = pd.DataFrame({'Type': [''], 'Category': [''], 'Amount': ['']})
-    blank_rows2 = blank_rows.copy()
+def create_categories():
+    with open("classifications/categories.json") as f:
+        json_data = json.load(f)
+        all_categories = json_data['income'] + json_data['expense'] + json_data['investments']
+        expense_categories = json_data['expense']
+        income_categories = json_data['income']
+        investment_categories = json_data['investments']
 
-    # Build final output
-    final_df = pd.concat([
-        expense_header,
-        expense_df.assign(Type=""),  # remove repeated labels
-        blank_rows,
-        investment_header,
-        investment_df.assign(Type=""),  # remove repeated labels
-    ], ignore_index=True)
-
-    final_df
-
-    return final_df
+    return all_categories,expense_categories,income_categories,investment_categories
