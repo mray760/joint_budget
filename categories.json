@@ -1,0 +1,32 @@
+{
+  "income": [
+    "Amys Allowance",
+    "Direct Deposit - Matt",
+    "Direct Deposit - Amy",
+    "Venmo Income",
+    "Zelle Income"
+  ],
+  "expense": [
+    "Automotive",
+    "Gas",
+    "Groceries",
+    "Home",
+    "Insurance",
+    "Leisure",
+    "Mortgage",
+    "Pet Food",
+    "Subscriptions",
+    "Utilities",
+    "Rent",
+    "Venmo Expense",
+    "Zelle Expense",
+    "Education",
+    "Gifts",
+    "Amys Allowance",
+    "Other Expense"
+  ],
+  "investments": [
+    "Investments"
+  ]
+  
+}
